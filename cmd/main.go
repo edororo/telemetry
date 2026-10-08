@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 	"uuid"
 )
 
@@ -25,17 +26,26 @@ func main() {
 	defer pool.Close()
 	wg := &sync.WaitGroup{}
 	ch := make(chan model.Telemetry)
+	p := processor.NewProcessor(pool)
+
 	dronesim := simulator.DroneSimulator{ID: uuid.New(),
-		Name:       "Вася",
-		Latitude:   1,
-		Longitude:  2,
-		Altitude:   3,
-		Speed:      4,
-		Battery:    10,
-		Heading:    6,
-		Signal:     7,
-		Latency:    8,
-		PacketLoss: 9}
+		Name:        "Вася",
+		Temperature: 35,
+		Latitude:    1,
+		Longitude:   2,
+		Altitude:    3,
+		Speed:       4,
+		Battery:     10,
+		Heading:     6,
+		Signal:      7,
+		Latency:     8,
+		PacketLoss:  9}
+	drone := model.Drone{ID: dronesim.ID, Name: dronesim.Name, Status: "active", CreatedAt: time.Now(), LastSeen: time.Now()}
+	err = storage.CreateDrone(ctx, pool, drone)
+	if err != nil {
+		fmt.Printf("Ошибка: %v\n", err)
+		return
+	}
 
 	for i := 0; i < 3; i++ {
 		wg.Add(1)
@@ -46,10 +56,10 @@ func main() {
 	}
 	for i := 0; i < 3; i++ {
 		wg.Add(1)
-		go func() {
+		go func(workerID int) {
 			defer wg.Done()
-			processor.Worker(ctx, ch, i+1)
-		}()
+			processor.Worker(ctx, ch, workerID, p)
+		}(i + 1)
 	}
 	for {
 		select {

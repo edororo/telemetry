@@ -15,7 +15,7 @@ type Telemetry struct {
 	Speed       float32   `json:"speed"`
 	Battery     float32   `json:"battery"`
 	Temperature float32   `json:"temperature"`
-	Heading     float32   `json:"heading"`
+	Heading     float32   `json:"heading"` // направление от 0 градусов до 360
 	Signal      float32   `json:"signal"`
 	Latency     int       `json:"latency"` // задержка
 	PacketLoss  float32   `json:"packetLoss"`
